@@ -25,7 +25,7 @@ server.use(restifyPlugin.bodyParser());
 server.get('/get/all_order', find_all_order);
 server.get('/get/:order_id', find_order);
 server.post('/post/order', new_order);
-// server.post('/update/:order_id', update_user);
+server.post('/update/:order_id', update_order);
 // server.post('/delete/all_user', delete_all_user);
 // server.post('/delete/:username', delete_user);
 
@@ -171,37 +171,38 @@ function new_order (req, res, next) {
 };
 
 
-// function update_order (req, res, next) {
+function update_order (req, res, next) {
 
-// 	var data = {
-// 		'order_id': req.params.order_id,
-// 		'user_id': req.body.user_id,
-// 		'date': req.body.date,
-// 		'room_type': req.body.room_type
-// 	}
-// 		var fields = order_id.split('_');
-// 		data.old_key = fields[0] + '_' + fields[1];
-// 		data.new_key = data.date + '_' + data.room_type;
+	var data = {
+		'order_id': req.params.order_id,
+		'user_id': req.body.user_id,
+		'date': req.body.date,
+		'room_type': req.body.room_type
+		
+	}
+		var fields = data.order_id.split('_');
+		data.old_key = fields[0] + '_' + fields[1];
+		data.new_key = data.date + '_' + data.room_type;
 
-// 	// find the user starlord55
-// 	// update him to starlord 88
-// 	User.findOneAndUpdate({ order_id: data.order_id }, { order_id: data.order_id, user_id: data.user_id, date: data.date, room_type: data.room_type }, function(err, user) {
-// 		if (err) {
-// 			console.log(err);
-// 			res.send(err.message);
-// 			return next();
-// 		}else if( order_id == null ){
-// 			console.log('cannot find order_id');
-// 			res.send('cannot find order_id');
-// 			return next();
-// 		}else{
-// 			// we have the updated user returned to us
-// 			console.log(order);
-// 			res.send(order);
-// 			return next();
-// 		}
-// 	});
-// };
+	// find the user starlord55
+	// update him to starlord 88
+	Order.findOneAndUpdate({ order_id: data.order_id }, { key: data.new_key, user_id: data.user_id, date: data.date, room_type: data.room_type, order_id: data.order_id }, function(err, user) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		}else if( data.order_id == null ){
+			console.log('cannot find order_id');
+			res.send('cannot find order_id');
+			return next();
+		}else{
+			// we have the updated user returned to us
+			console.log(data.order_id);
+			res.send(data.order_id);
+			return next();
+		}
+	});
+};
 
 // function delete_user (req, res, next) {
 
