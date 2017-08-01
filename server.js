@@ -31,8 +31,11 @@ server.post('/update/:order_id', update_order);
 server.post('/delete/:order_id', delete_order);
 
 // room function
-
-
+server.get('/get/all_room', find_all_room);
+server.get('/get/:key', find_room);
+server.post('/post/room', new_room);
+// server.post('/update/:key', update_room);
+// server.post('/delete/:key', delete_room);
 
 server.listen(8070, function () {
   console.log('%s listening at %s', server.name, server.url);
@@ -43,6 +46,7 @@ server.listen(8070, function () {
 // 	return next();
 // };
 
+// ORDER
 function find_all_order (req, res, next) {
 
 	// get all the users
@@ -249,4 +253,79 @@ function delete_order (req, res, next) {
 		
 // 	});
 // }
+
+// ROOM
+// function find_all_room (req, res, next) {
+
+// 	// get all the users
+// 	Room.find({}, function(err, rooms) {
+// 		if (err) {
+// 			console.log(err);
+// 			res.send(err.message);
+// 			return next();
+// 		}else if (rooms.length == 0){
+// 			console.log('cannot find any room');
+// 			res.send('cannot find any room');
+// 			return next();
+// 		}else{
+// 			// object of all the rooms
+// 			console.log(rooms);
+// 			res.send(rooms);
+// 			return next();
+// 		}
+// 	});
+// };
+
+
+// function find_room (req, res, next) {
+
+// 	// get the room starlord55
+// 	Room.find({ room_id: req.params.room_id }, function(err, room) {
+// 		if (err) {
+// 			console.log(err);
+// 			res.send(err.message);
+// 			return next();
+// 		}
+// 		else if (room.length == 0){
+// 			console.log('cannot find room');
+// 			res.send('cannot find room');
+// 			return next();
+// 		}else{
+// 			// object of the room
+// 			console.log(room);
+// 			res.send(room);
+// 			return next();
+// 		}
+// 	});
+// };
+
+function new_room (req, res, next) {
+
+	var data = {
+		'key': req.body.key,
+		'total': req.body.total,
+		'soldout': req.body.soldout
+	}
+
+	// create a new user called user ENTITY
+	var room_data = new Room({
+		key: data.key,
+		total: data.total,
+		soldout: data.soldout,
+	});
+
+	// call the built-in save method to save to the database
+	room_data.save(function(err) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		}
+		console.log('Room saved successfully!');
+		// res.send('%s has been added to the DB!', data.name);
+		res.send(data.key);
+		return next();
+	});
+
+};
 
