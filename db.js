@@ -26,7 +26,7 @@ var orderSchema = new mongoose.Schema({
 var roomSchema = new mongoose.Schema({
 	key: { type: String, required: true, unique: true },
 	total: Number,
-	soldout: Number
+	soldout: { type: Number, default: 0 }
 })
 
 orderSchema.plugin(uniqueValidator);

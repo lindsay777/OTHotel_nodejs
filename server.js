@@ -26,16 +26,16 @@ server.use(restifyPlugin.bodyParser());
 server.get('/get/order/all_order', find_all_order);
 server.get('/get/order/:order_id', find_order);
 server.post('/post/order', new_order);
-server.post('/update/:order_id', update_order);
+server.post('/update/order/:order_id', update_order);
 // server.post('/delete/all_user', delete_all_user);
-server.post('/delete/:order_id', delete_order);
+server.post('/delete/order/:order_id', delete_order);
 
 // room function
 server.get('/get/room/all_room', find_all_room);
 server.get('/get/room/:key', find_room);
 server.post('/post/room', new_room);
-// server.post('/update/:key', update_room);
-// server.post('/delete/:key', delete_room);
+server.post('/update/room/:key', update_room);
+server.post('/delete/room/:key', delete_room);
 
 server.listen(8070, function () {
   console.log('%s listening at %s', server.name, server.url);
@@ -276,7 +276,6 @@ function find_all_room (req, res, next) {
 	});
 };
 
-
 function find_room (req, res, next) {
 
 	// get the room starlord55
@@ -316,7 +315,7 @@ function new_room (req, res, next) {
 	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
 	console.log(data);
 	myContract.new_room(	// transfer 是 contract 裡 的一個 function
-		data.key, data.total,
+		data.key, data.total, 
 
 		{
 			from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
@@ -343,6 +342,56 @@ function new_room (req, res, next) {
 		// res.send('%s has been added to the DB!', data.name);
 		res.send(data.key);
 		return next();
+	});
+};
+
+function update_room (req, res, next) {
+
+	var data = {
+		'key': req.params.key,
+		'total': req.body.total,
+		'soldout': req.body.soldout		
+	}
+
+	// find the user starlord55
+	// update him to starlord 88
+	Room.findOneAndUpdate({ key: data.key }, { key: data.key, total: data.total, soldout: data.soldout}, function(err, user) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		}else if( data.key == null ){
+			console.log('cannot find key');
+			res.send('cannot find key');
+			return next();
+		}else{
+			// we have the updated user returned to us
+			console.log(data.key);
+			res.send(data.key);
+			return next();
+		}
+	});
+};
+
+function delete_room (req, res, next) {
+
+	var data = {
+		'key': req.params.key,
+	}
+
+	// find the user with id 4
+	Room.findOneAndRemove({ key: data.key }, function(err) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		} else {
+			// we have deleted the user
+			console.log(data.key + ' has been deleted!');
+			res.send(data.key + ' has been deleted!');
+			return next();
+		}
+		
 	});
 
 };
