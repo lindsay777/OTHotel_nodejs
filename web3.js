@@ -1,0 +1,22 @@
+const Web3 = require('web3');
+
+const ethereumUri = 'http://localhost:8545';
+const address = '0x0C9448292fB3812C207985e3569646f6dbAD9137'; // user
+
+let web3 = new Web3();
+web3.setProvider(new web3.providers.HttpProvider(ethereumUri));
+
+if(!web3.isConnected()){
+    throw new Error('unable to connect to ethereum node at ' + ethereumUri);
+}else{
+    console.log('connected to ehterum node at ' + ethereumUri);
+}
+
+// creation of contract object
+var MyContract = web3.eth.contract([ { "constant": false, "inputs": [ { "name": "key", "type": "bytes" }, { "name": "user_id", "type": "bytes" }, { "name": "date", "type": "bytes" }, { "name": "room_type", "type": "uint256" }, { "name": "order_id", "type": "bytes" } ], "name": "new_order", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "owner_2", "outputs": [ { "name": "", "type": "address", "value": "0x0000000000000000000000000000000000000000" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "old_key", "type": "bytes" }, { "name": "new_key", "type": "bytes" }, { "name": "user_id", "type": "bytes" }, { "name": "date", "type": "bytes" }, { "name": "room_type", "type": "uint256" }, { "name": "order_id", "type": "bytes" } ], "name": "update_order", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "key", "type": "bytes" } ], "name": "room_detail", "outputs": [ { "name": "", "type": "bytes" }, { "name": "", "type": "uint256" }, { "name": "", "type": "uint256" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "key", "type": "bytes" }, { "name": "total", "type": "uint256" } ], "name": "new_room", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "key", "type": "bytes" } ], "name": "delete_room", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "order_id", "type": "bytes" }, { "name": "key", "type": "bytes" } ], "name": "delete_order", "outputs": [], "payable": false, "type": "function" }, { "constant": true, "inputs": [], "name": "owner", "outputs": [ { "name": "", "type": "address", "value": "0xae75dffd61993cb18321862aaa6c800ce930c2d7" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "key", "type": "bytes" } ], "name": "check", "outputs": [ { "name": "", "type": "bool" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "key", "type": "bytes" }, { "name": "total", "type": "uint256" }, { "name": "soldout", "type": "uint256" } ], "name": "edit_room", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "order_id", "type": "bytes" } ], "name": "order_detail", "outputs": [ { "name": "", "type": "bytes" }, { "name": "", "type": "bytes" }, { "name": "", "type": "bytes" }, { "name": "", "type": "uint256" } ], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "payable": false, "type": "function" }, { "constant": false, "inputs": [ { "name": "newOwner", "type": "address" } ], "name": "addOwnership", "outputs": [], "payable": false, "type": "function" }, { "inputs": [], "payable": false, "type": "constructor" }, { "anonymous": false, "inputs": [ { "indexed": false, "name": "key", "type": "bytes" }, { "indexed": false, "name": "user_id", "type": "bytes" }, { "indexed": false, "name": "order_id", "type": "bytes" }, { "indexed": false, "name": "check", "type": "bool" } ], "name": "new_order_event", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": false, "name": "new_key", "type": "bytes" }, { "indexed": false, "name": "user_id", "type": "bytes" }, { "indexed": false, "name": "order_id", "type": "bytes" }, { "indexed": false, "name": "check", "type": "bool" } ], "name": "update_order_event", "type": "event" } ])
+myContractAddress ='0x751863bBad621e3Ddc5b52C3B9EE53589A5faE76';	//ethereum 中 contract 的 address
+var myContractInstance = MyContract.at(myContractAddress);	// initiate contract for an address
+
+module.exports = {
+	web3, myContractInstance
+}
