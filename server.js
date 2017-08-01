@@ -23,16 +23,16 @@ server.use(restifyPlugin.bodyParser());
 
 // order function
 // server.get('/echo/:name', name);
-server.get('/get/all_order', find_all_order);
-server.get('/get/:order_id', find_order);
+server.get('/get/order/all_order', find_all_order);
+server.get('/get/order/:order_id', find_order);
 server.post('/post/order', new_order);
 server.post('/update/:order_id', update_order);
 // server.post('/delete/all_user', delete_all_user);
 server.post('/delete/:order_id', delete_order);
 
 // room function
-server.get('/get/all_room', find_all_room);
-server.get('/get/:key', find_room);
+server.get('/get/room/all_room', find_all_room);
+server.get('/get/room/:key', find_room);
 server.post('/post/room', new_room);
 // server.post('/update/:key', update_room);
 // server.post('/delete/:key', delete_room);
@@ -170,9 +170,9 @@ function new_order (req, res, next) {
 				res.send(err.message);
 				return next();
 			}
-			console.log('User saved successfully!');
+			console.log('Order saved successfully!');
 			// res.send('%s has been added to the DB!', data.name);
-			res.send(data.name);
+			res.send(data.order_id);
 			return next();
 		});
 	}
@@ -255,64 +255,82 @@ function delete_order (req, res, next) {
 // }
 
 // ROOM
-// function find_all_room (req, res, next) {
+function find_all_room (req, res, next) {
 
-// 	// get all the users
-// 	Room.find({}, function(err, rooms) {
-// 		if (err) {
-// 			console.log(err);
-// 			res.send(err.message);
-// 			return next();
-// 		}else if (rooms.length == 0){
-// 			console.log('cannot find any room');
-// 			res.send('cannot find any room');
-// 			return next();
-// 		}else{
-// 			// object of all the rooms
-// 			console.log(rooms);
-// 			res.send(rooms);
-// 			return next();
-// 		}
-// 	});
-// };
+	// get all the users
+	Room.find({}, function(err, rooms) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		}else if (rooms.length == 0){
+			console.log('cannot find any room');
+			res.send('cannot find any room');
+			return next();
+		}else{
+			// object of all the rooms
+			console.log(rooms);
+			res.send(rooms);
+			return next();
+		}
+	});
+};
 
 
-// function find_room (req, res, next) {
+function find_room (req, res, next) {
 
-// 	// get the room starlord55
-// 	Room.find({ room_id: req.params.room_id }, function(err, room) {
-// 		if (err) {
-// 			console.log(err);
-// 			res.send(err.message);
-// 			return next();
-// 		}
-// 		else if (room.length == 0){
-// 			console.log('cannot find room');
-// 			res.send('cannot find room');
-// 			return next();
-// 		}else{
-// 			// object of the room
-// 			console.log(room);
-// 			res.send(room);
-// 			return next();
-// 		}
-// 	});
-// };
+	// get the room starlord55
+	Room.find({ key: req.params.key }, function(err, room) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		}
+		else if (room.length == 0){
+			console.log('cannot find room');
+			res.send('cannot find room');
+			return next();
+		}else{
+			// object of the room
+			console.log(room);
+			res.send(room);
+			return next();
+		}
+	});
+};
 
 function new_room (req, res, next) {
 
 	var data = {
 		'key': req.body.key,
-		'total': req.body.total,
-		'soldout': req.body.soldout
+		'total': req.body.total
 	}
 
 	// create a new user called user ENTITY
 	var room_data = new Room({
 		key: data.key,
-		total: data.total,
-		soldout: data.soldout,
+		total: data.total
 	});
+
+
+	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
+	console.log(data);
+	myContract.new_room(	// transfer 是 contract 裡 的一個 function
+		data.key, data.total,
+
+		{
+			from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
+			'gas': myContract.new_room.estimateGas(data.key, data.total) //執行function所需的gas ((發現放input突然就可以了
+		},
+		function(err, result) {	//callback 的 function
+			if (!err){
+				console.log("Transaction_Hash: " + result);
+			}
+			else {
+				console.log(err);
+			}
+		}
+	);
 
 	// call the built-in save method to save to the database
 	room_data.save(function(err) {
