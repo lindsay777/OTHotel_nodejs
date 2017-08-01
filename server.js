@@ -21,13 +21,17 @@ console.log(web3.version.node)
 // user
 server.use(restifyPlugin.bodyParser());
 
+// order function
 // server.get('/echo/:name', name);
 server.get('/get/all_order', find_all_order);
 server.get('/get/:order_id', find_order);
 server.post('/post/order', new_order);
 server.post('/update/:order_id', update_order);
 // server.post('/delete/all_user', delete_all_user);
-// server.post('/delete/:username', delete_user);
+server.post('/delete/:order_id', delete_order);
+
+// room function
+
 
 
 server.listen(8070, function () {
@@ -204,28 +208,29 @@ function update_order (req, res, next) {
 	});
 };
 
-// function delete_user (req, res, next) {
 
-// 	var data = {
-// 		'username': req.params.username,
-// 	}
+function delete_order (req, res, next) {
 
-// 	// find the user with id 4
-// 	User.findOneAndRemove({ username: data.username }, function(err) {
-// 		if (err) {
-// 			console.log(err);
-// 			res.send(err.message);
-// 			return next();
-// 		} else {
-// 			// we have deleted the user
-// 			console.log(data.username + 'has been deleted!');
-// 			res.send(data.username + 'has been deleted!');
-// 			return next();
-// 		}
+	var data = {
+		'order_id': req.params.order_id,
+	}
+
+	// find the user with id 4
+	Order.findOneAndRemove({ order_id: data.order_id }, function(err) {
+		if (err) {
+			console.log(err);
+			res.send(err.message);
+			return next();
+		} else {
+			// we have deleted the user
+			console.log(data.order_id + 'has been deleted!');
+			res.send(data.order_id + 'has been deleted!');
+			return next();
+		}
 		
-// 	});
+	});
 
-// };
+};
 
 // function delete_all_user(req, res, next) {
 	
