@@ -81,7 +81,7 @@ function find_all_room (req, res, next) {
 function find_room (req, res, next) {
 
 	// get the room starlord55
-	Room.find({ key: req.body.key }, function(err, room) {
+	Room.find({ key: '2017-08-11_1' }, function(err, room) {
 		if (err) {
 			console.log(err);
 			res.send(err.message);
@@ -255,6 +255,8 @@ function new_order (req, res, next) {
 	console.log(data.key)
 	data.order_id = data.key + '_' + data.user_id + '_' + moment().format('HH:mm:ss');
 
+	console.log(chalk.cyan('user_id: %s, key: %s, order_id: %s'), data.user_id, data.key, data.order_id);
+
 	event_filter(req, res, next);
 
 	// BC
@@ -291,15 +293,16 @@ function new_order (req, res, next) {
 						console.log(result);
 
 						save(req, res, next);
-						console.log("BC save!!");
+						console.log(chalk.magentaBright('Order %s is NEWED in BC!'), data.order_id);
 					}
 					else if(result.args.check == false)
-						console.log("BC false");
+						print_color(chalk.magentaBright('Order Unavailable'))
 				}
 			}
 		});
 	}
 
+	// DB
 	// 如果前面回傳true 表示有成功 可以把它寫進資料庫
 	function save(req, res, next){
 		// create a new user called user ENTITY
@@ -318,12 +321,12 @@ function new_order (req, res, next) {
 				res.send(err.message);
 				return next();
 			}
-			console.log('Order %s saved successfully!', data.order_id);
+			console.log(chalk.magentaBright('Order %s is NEWED in DB!'), data.order_id);
 			// res.send('%s has been added to the DB!', data.name);
 			// res.send(data.order_id);
 		});
 
-		Room.findOneAndUpdate({ key: 'data.key' },
+		Room.findOneAndUpdate({ key: data.key },
 			{
 	      		$inc: {
 	        		soldout: 1
@@ -334,9 +337,10 @@ function new_order (req, res, next) {
 				console.log(err);
 				res.send(err.message);
 				return next();
+			}else if(room == null){
+				console.log('cannot find room!');
 			}
-
-			console.log('room.key: %s updated!',data.key);
+			console.log(chalk.cyan('room: %s soldout +1!'),data.key);
 			return next();
 		});
 	}	
@@ -349,23 +353,21 @@ function update_order (req, res, next) {
 		'user_id': req.body.user_id,
 		'date': req.body.date,
 		'room_type': req.body.room_type
-		
 	}
 	var fields = data.order_id.split('_');
-	old_key = fields[0] + '_' + fields[1];
-	new_key = data.date + '_' + data.room_type;
-	console.log(old_key);
-	console.log(new_key);
-	console.log(data);
+	data.old_key = fields[0] + '_' + fields[1];
+	data.new_key = data.date + '_' + data.room_type;
+
+	console.log(chalk.cyan('user_id: %s, new_key: %s'), data.user_id, data.new_key);
 
 	// BC
 	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
 
 	myContract.update_order(	// transfer 是 contract 裡 的一個 function
-		old_key, new_key, data.user_id, data.date, data.room_type, data.order_id,
+		data.old_key, data.new_key, data.user_id, data.date, data.room_type, data.order_id,
 		{
 			from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
-			'gas': myContract.update_order.estimateGas(old_key, new_key, data.user_id, data.date, data.room_type, data.order_id) //執行function所需的gas ((發現放input突然就可以了
+			'gas': myContract.update_order.estimateGas(data.old_key, data.new_key, data.user_id, data.date, data.room_type, data.order_id) //執行function所需的gas ((發現放input突然就可以了
 		},
 		function(err, result) {	//callback 的 function
 			if (!err){
@@ -390,12 +392,12 @@ function update_order (req, res, next) {
 			return next();
 		}else{
 			// we have the updated user returned to us
-			console.log(chalk.green(data.order_id));
+			console.log(chalk.magentaBright('Order %s is UPDATED in DB!'), data.order_id);
 			res.send(data.order_id);
 		}
 	});
 	// change room: old key soldout -1, new key soldout +1
-	Room.findOneAndUpdate({ key: 'data.old_key' },
+	Room.findOneAndUpdate({ key: data.old_key },
 		{
       		$inc: {
         		soldout: -1
@@ -407,11 +409,8 @@ function update_order (req, res, next) {
 				res.send(err.message);
 				return next();
 		}
-
-		console.log('room.key: %s updated!',data.key);
-		return next();
 	});
-	Room.findOneAndUpdate({ key: 'data.key' },
+	Room.findOneAndUpdate({ key: data.new_key },
 		{
       		$inc: {
         		soldout: 1
@@ -423,9 +422,6 @@ function update_order (req, res, next) {
 				res.send(err.message);
 				return next();
 		}
-
-		console.log('room.key: %s updated!',data.key);
-		return next();
 	});
 
 	console.log('room %s soldout -1, room %s soldout +1', data.old_key, data.new_key);
@@ -472,7 +468,7 @@ function delete_order (req, res, next) {
 		}
 	});
 	// change room soldout
-	Room.findOneAndUpdate({ key: 'data.key' },
+	Room.findOneAndUpdate({ key: data.key },
 		{
       		$inc: {
         		soldout: -1
