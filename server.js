@@ -244,6 +244,9 @@ function find_order (req, res, next) {
 
 function new_order (req, res, next) {
 
+	console.time("new_order_time");
+	console.time("transaction_time");
+
 	var data = {
 		'user_id': req.body.user_id,
 		'date': req.body.date,
@@ -287,7 +290,7 @@ function new_order (req, res, next) {
 		var block = web3.eth.getBlock('latest').number;
 		new_order_event.watch(function(error, result){
 			if (!error && result.blockNumber > block){
-				if(web3.toAscii(result.args.key) == data.key){
+				if(web3.toAscii(result.args.order_id) == data.order_id){
 					if(result.args.check == true){
 						new_order_event.stopWatching();
 						console.log(result);
@@ -296,7 +299,7 @@ function new_order (req, res, next) {
 						console.log(chalk.magentaBright('order %s is NEWED in BC!'), data.order_id);
 					}
 					else if(result.args.check == false)
-						print_color(chalk.magentaBright('order Unavailable'))
+						console.log(chalk.magentaBright('order Unavailable'))
 				}
 			}
 		});
@@ -341,6 +344,7 @@ function new_order (req, res, next) {
 				console.log('cannot find room!');
 			}
 			console.log(chalk.cyan('room: %s soldout +1!'),data.key);
+			console.timeEnd("new_order_time");
 			return next();
 		});
 	}	
