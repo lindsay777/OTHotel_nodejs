@@ -35,6 +35,7 @@ server.use(restifyPlugin.bodyParser());
 server.get('/get/room/all_room', find_all_room);
 server.get('/get/room', find_room);
 server.post('/post/room', new_room);
+server.post('/post/multiroom', multiroom);
 server.post('/update/room', update_room);
 server.post('/delete/room', delete_room);
 
@@ -144,6 +145,78 @@ function new_room (req, res, next) {
 		res.send(data.key + ' is NEWED!');
 		return next();
 	});
+};
+
+function multiroom (req, res, next) {
+
+	var data = {
+		'startdate': req.body.startdate,
+		'enddate': req.body.enddate,
+		'room_type': req.body.room_type,
+		'total': req.body.total
+	}
+
+	data.startdate = new Date(data.startdate)
+	data.enddate = new Date(data.enddate)
+
+	var year = data.startdate.getFullYear()
+	var month = data.startdate.getMonth()
+	var day = data.startdate.getDate()
+	
+	var dates = [data.startdate];
+
+	while(dates[dates.length-1] < data.enddate) {
+	  dates.push(new Date(year, month, ++day));
+	}
+
+	dates.splice(0,1)	// 拿掉第一個...
+
+	for (var i = 0; i < dates.length; i++) {
+		var date = dates[i].toISOString().substring(0, 10)
+		var key = date + '_' + data.room_type
+		add_room(key,data.total)
+	}
+
+	res.send('Rooms are NEWED!');
+	return next();
+
+	function add_room (key,total) {
+		// create a new user called user ENTITY
+		var room_data = new Room({
+			key: key,
+			total: total
+		});
+		console.log(chalk.cyan('key: %s, total: %s, soldout: 0'), room_data.key, room_data.total);
+
+		web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
+		myContract.new_room(	// transfer 是 contract 裡 的一個 function
+			room_data.key, room_data.total, 
+
+			{
+				from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
+				'gas': myContract.new_room.estimateGas(room_data.key, room_data.total) //執行function所需的gas ((發現放input突然就可以了
+			},
+			function(err, result) {	//callback 的 function
+				if (!err){
+					console.log("Transaction_Hash: " + result);
+				}
+				else {
+					console.log(err);
+				}
+			}
+		);
+
+		// call the built-in save method to save to the database
+		room_data.save(function(err) {
+			if (err) {
+				console.log(err);
+				res.send(err.message);
+				return next();
+			}
+			console.log(chalk.cyan('Room %s is NEWED!'), room_data.key);
+			// res.send('%s has been added to the DB!', room_data.name);
+		});
+	}
 };
 
 function update_room (req, res, next) {
