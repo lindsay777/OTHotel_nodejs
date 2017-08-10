@@ -1,0 +1,22 @@
+{
+  "name": "deploy_contract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.0.1",
+    "moment": "^2.18.1",
+    "mongoose": "^4.11.5",
+    "mongoose-unique-validator": "^1.0.5",
+    "restify": "^5.0.1",
+    "restify-plugins": "^1.6.0",
+    "solc": "^0.4.11",
+    "web3": "^0.19.1"
+  },
+  "devDependencies": {},
+  "description": ""
+}
