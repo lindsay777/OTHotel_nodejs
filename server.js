@@ -72,7 +72,6 @@ function find_all_room (req, res, next) {
 			return next();
 		}else{
 			// object of all the rooms
-			console.log(rooms);
 			res.send(rooms);
 			return next();
 		}
@@ -286,7 +285,6 @@ function find_all_order (req, res, next) {
 			return next();
 		}else{
 			// object of all the users
-			console.log(orders);
 			res.send(orders);
 			return next();
 		}
@@ -301,8 +299,7 @@ function find_order (req, res, next) {
 			console.log(err);
 			res.send(err.message);
 			return next();
-		}
-		else if (order.length == 0){
+		}else if (order.length == 0){
 			console.log('cannot find order');
 			res.send('cannot find order');
 			return next();
@@ -318,13 +315,14 @@ function find_order (req, res, next) {
 function new_order (req, res, next) {
 
 	console.time("new_order_time");
+	console.time("before_transaction_time");
 	console.time("transaction_time");
 
 	var data = {
 		'user_id': req.body.user_id,
 		'date': req.body.date,
 		'room_type': req.body.room_type
-	}
+	};
 
 	//要新增一筆訂單
 	data.key = data.date + '_' + data.room_type
@@ -338,6 +336,7 @@ function new_order (req, res, next) {
 	// BC
 	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
 
+	console.timeEnd("before_transaction_time");
 	myContract.new_order(	// transfer 是 contract 裡 的一個 function
 		data.key, data.user_id, data.date, data.room_type, data.order_id,
 		{
@@ -347,6 +346,7 @@ function new_order (req, res, next) {
 		function(err, result) {	//callback 的 function
 			if (!err){
 				console.log(chalk.yellow("Transaction_Hash: " + result));
+				console.timeEnd("transaction_time");
 			}
 			else {
 				console.log(err);
