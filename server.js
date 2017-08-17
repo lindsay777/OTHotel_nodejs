@@ -33,6 +33,10 @@ server.use(
 server.use(restifyPlugin.bodyParser());
 server.use(restifyPlugin.queryParser());
 
+server.listen(8070, function () {
+  console.log('%s listening at %s', server.name, server.url);
+});
+
 // promotion function
 server.post('/post/promotion', new_promotion);
 server.post('/update/promotion', update_promotion);
@@ -47,9 +51,8 @@ server.post('/post/multiroom', multiroom);
 server.post('/post/discount', set_discount);
 server.post('/update/room', update_room);
 server.post('/delete/room', delete_room);
-server.listen(8070, function () {
-  console.log('%s listening at %s', server.name, server.url);
-});
+server.get('/update/isEarly', update_isEarly);
+server.get('/update/isNight', update_isNight);
 
 // order function
 server.get('/get/order/all_order', find_all_order);
@@ -488,8 +491,99 @@ function get_price (req, res, next) {
 	}else{
 		return next();
 	}
-	
 };
+
+function update_isEarly (req, res, next) {
+	var data = {
+		'key': req.body.key,
+		'isEarly': req.body.isEarly
+	}
+	console.log(chalk.cyan('key: %s, isEarly: %s'), data.key, data.isEarly);
+	
+	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
+	myContract.update_isEarly(	// transfer 是 contract 裡 的一個 function
+		data.key, data.isEarly,
+		{
+			from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
+			'gas': myContract.update_isEarly.estimateGas(data.key, data.isEarly)  //執行function所需的gas ((發現放input突然就可以了
+		},
+		function(err, result) {	//callback 的 function
+			if (!err){
+				console.log("Transaction_Hash: " + result);
+				update(req, res, next)
+			}
+			else {
+				console.log(err);
+			}
+		}
+	);
+
+	function update(req, res, next){
+		// find the room and update
+		Room.findOneAndUpdate({ key: data.key }, { key: data.key, isEarly: data.isEarly}, function(err, user) {
+			if (err) {
+				console.log(err);
+				res.send(err.message);
+				return next();
+			}else if( data.key == null ){
+				console.log(chalk.red('cannot find key'));
+				res.send('cannot find key');
+				return next();
+			}else{
+				// we have the updated user returned to us
+				console.log(chalk.cyan('Room %s isEarly is UPDATED!'), data.key);
+				res.send(data.key + ' isEarly is UPDATED!');
+				return next();
+			}
+		});
+	}
+};
+
+function update_isNight (req, res, next) {
+	var data = {
+		'key': req.body.key,
+		'isNight': req.body.isNight
+	}
+	console.log(chalk.cyan('key: %s, isNight: %s'), data.key, data.isNight);
+	
+	web3.personal.unlockAccount(web3.eth.coinbase, 'internintern', 300);	//解鎖要執行 function 的 account
+	myContract.update_isNight(	// transfer 是 contract 裡 的一個 function
+		data.key, data.isNight,
+		{
+			from: web3.eth.coinbase,	//從哪個ethereum帳戶執行
+			'gas': myContract.update_isNight.estimateGas(data.key, data.isNight)  //執行function所需的gas ((發現放input突然就可以了
+		},
+		function(err, result) {	//callback 的 function
+			if (!err){
+				console.log("Transaction_Hash: " + result);
+				update(req, res, next)
+			}
+			else {
+				console.log(err);
+			}
+		}
+	);
+
+	function update(req, res, next){
+		// find the room and update
+		Room.findOneAndUpdate({ key: data.key }, { key: data.key, isNight: data.isNight}, function(err, user) {
+			if (err) {
+				console.log(err);
+				res.send(err.message);
+				return next();
+			}else if( data.key == null ){
+				console.log(chalk.red('cannot find key'));
+				res.send('cannot find key');
+				return next();
+			}else{
+				// we have the updated user returned to us
+				console.log(chalk.cyan('Room %s isNight is UPDATED!'), data.key);
+				res.send(data.key + ' isNight is UPDATED!');
+				return next();
+			}
+		});
+	}
+}
 
 // ORDER
 function find_all_order (req, res, next) {
