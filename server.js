@@ -596,8 +596,8 @@ function find_all_order (req, res, next) {
 			return next();
 		}
 		else if (orders.length == 0){
-			console.log(chalk.red('cannot find any user'));
-			res.send('cannot find any user');
+			console.log(chalk.red('cannot find any order'));
+			res.send('cannot find any order');
 			return next();
 		}else{
 			// object of all the users
