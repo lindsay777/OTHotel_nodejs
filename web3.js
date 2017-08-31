@@ -1,7 +1,6 @@
 const Web3 = require('web3');
 
 const ethereumUri = 'http://localhost:8545';
-const address = '00x63bF7ADdd173e0775A9Cb74c7edCEE0f1Ad8d51B'; // user
 
 let web3 = new Web3();
 web3.setProvider(new web3.providers.HttpProvider(ethereumUri));

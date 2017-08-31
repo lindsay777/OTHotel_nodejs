@@ -11,7 +11,7 @@ const DB = require('./db');
 const Order = DB.Order;
 const Room = DB.Room;
 const Promotion = DB.Promotion;
-
+const Transaction = DB.Transaction;
 // chalk
 const chalk = require('chalk');
 
@@ -180,8 +180,10 @@ function find_all_room (req, res, next) {
 
 function find_room (req, res, next) {
 
+	let key = req.query.key;
+
 	// get the room starlord55
-	Room.find({ key: '2017-08-11_1' }, function(err, room) {
+	Room.find({ key: key }, function(err, room) {
 		if (err) {
 			console.log(err);
 			res.send(err.message);
@@ -236,26 +238,37 @@ function new_room (req, res, next) {
 		},
 		function(err, result) {	//callback 的 function
 			if (!err){
-				console.log("Transaction_Hash: " + result);
+				var transaction_data = new Transaction({
+					type: "room",
+					id: data.key,
+					hash: result
+				});
+				transaction_data.save(function(err) {
+					if (err) {
+						console.log(err);
+						res.send(err.message);
+						return next();
+					}
+					console.log(chalk.cyan("Transaction_Hash: %s"), result);
+				});
+				// call the built-in save method to save to the database
+				room_data.save(function(err) {
+					if (err) {
+						console.log(err);
+						res.send(err.message);
+						return next();
+					}
+					console.log(chalk.cyan('Room %s is NEWED!'), data.key);
+					// res.send('%s has been added to the DB!', data.name);
+					res.send(data.key + ' is NEWED!');
+					return next();
+				});
 			}
 			else {
 				console.log(err);
 			}
 		}
 	);
-
-	// call the built-in save method to save to the database
-	room_data.save(function(err) {
-		if (err) {
-			console.log(err);
-			res.send(err.message);
-			return next();
-		}
-		console.log(chalk.cyan('Room %s is NEWED!'), data.key);
-		// res.send('%s has been added to the DB!', data.name);
-		res.send(data.key + ' is NEWED!');
-		return next();
-	});
 };
 
 function multiroom (req, res, next) {
@@ -290,7 +303,7 @@ function multiroom (req, res, next) {
 	for (var i = 0; i < dates.length; i++) {
 		var date = dates[i].toISOString().substring(0, 10)
 		var key = date + '_' + data.room_type
-		add_room(key,data.total)
+		add_room(key,data.total, data.original_price, data.sell_price, data.promotion_id, data.isHoliday, data.isEarly)
 	}
 
 	res.send('Rooms are NEWED!');
@@ -322,23 +335,35 @@ function multiroom (req, res, next) {
 			function(err, result) {	//callback 的 function
 				if (!err){
 					console.log("Transaction_Hash: " + result);
+					var transaction_data = new Transaction({
+						type: "room",
+						id: room_data.key,
+						hash: result
+					});
+					transaction_data.save(function(err) {
+						if (err) {
+							console.log(err);
+							res.send(err.message);
+							return next();
+						}
+						console.log(chalk.cyan("Transaction_Hash: %s"), result);
+					});
+					// call the built-in save method to save to the database
+					room_data.save(function(err) {
+						if (err) {
+							console.log(err);
+							res.send(err.message);
+							return next();
+						}
+						console.log(chalk.cyan('Room %s is NEWED!'), room_data.key);
+						// res.send('%s has been added to the DB!', room_data.name);
+					});
 				}
 				else {
 					console.log(err);
 				}
 			}
 		);
-
-		// call the built-in save method to save to the database
-		room_data.save(function(err) {
-			if (err) {
-				console.log(err);
-				res.send(err.message);
-				return next();
-			}
-			console.log(chalk.cyan('Room %s is NEWED!'), room_data.key);
-			// res.send('%s has been added to the DB!', room_data.name);
-		});
 	}
 };
 
@@ -385,6 +410,7 @@ function update_room (req, res, next) {
 		'promotion_id': req.body.promotion_id,
 		'isHoliday': req.body.isHoliday
 	}
+	console.log(chalk.yellow("     Update Room     "));
 	console.log(chalk.cyan('key: %s, total: %s, soldout: %s'), data.key, data.total, data.soldout);
 	console.log(chalk.cyan('original_price: %s, promotion_id: %s, isHoliday: %s'), data.original_price, data.promotion_id, data.isHoliday);
 
@@ -397,8 +423,21 @@ function update_room (req, res, next) {
 		},
 		function(err, result) {	//callback 的 function
 			if (!err){
-				console.log("Transaction_Hash: " + result);
-				update(req, res, next)
+				var transaction_data = new Transaction({
+					type: "room",
+					id: data.key,
+					hash: result
+				});
+				transaction_data.save(function(err) {
+					if (err) {
+						console.log(err);
+						res.send(err.message);
+						return next();
+					}
+					console.log(chalk.cyan("Transaction_Hash: %s"), result);
+					update(req, res, next)
+				});
+				
 			}
 			else {
 				console.log(err);
@@ -583,7 +622,7 @@ function update_isNight (req, res, next) {
 			}
 		});
 	}
-}
+};
 
 // ORDER
 function find_all_order (req, res, next) {
@@ -607,10 +646,10 @@ function find_all_order (req, res, next) {
 	});
 };
 
-function find_order (req, res, next) {
+function find_order (req, res, next) {	
 
 	// get the user starlord55
-	Order.find({ order_id: req.body.order_id }, function(err, order) {
+	Order.find({ order_id: req.query.order_id }, function(err, order) {
 		if (err) {
 			console.log(err);
 			res.send(err.message);
@@ -662,7 +701,19 @@ function new_order (req, res, next) {
 		},
 		function(err, result) {	//callback 的 function
 			if (!err){
-				console.log(chalk.yellow("Transaction_Hash: " + result));
+				var transaction_data = new Transaction({
+					type: "order",
+					id: data.order_id,
+					hash: result
+				});
+				transaction_data.save(function(err) {
+					if (err) {
+						console.log(err);
+						res.send(err.message);
+						return next();
+					}
+					console.log(chalk.yellow("Transaction_Hash: %s"), result);
+				});
 				console.timeEnd("transaction_time");
 			}
 			else {
@@ -717,7 +768,7 @@ function new_order (req, res, next) {
 			}
 			console.log(chalk.magentaBright('order %s is NEWED in DB!'), data.order_id);
 			// res.send('%s has been added to the DB!', data.name);
-			// res.send(data.order_id);
+			res.send('order ' + data.order_id + ' successed');
 		});
 
 		Room.findOneAndUpdate({ key: data.key },
@@ -771,7 +822,19 @@ function update_order (req, res, next) {
 		},
 		function(err, result) {	//callback 的 function
 			if (!err){
-				console.log(chalk.yellow("Transaction_Hash: " + result));
+				var transaction_data = new Transaction({
+					type: "order",
+					id: data.order_id,
+					hash: result
+				});
+				transaction_data.save(function(err) {
+					if (err) {
+						console.log(err);
+						res.send(err.message);
+						return next();
+					}
+					console.log(chalk.yellow("Transaction_Hash: %s"), result);
+				});
 			}
 			else {
 				console.log(err);

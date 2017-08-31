@@ -41,16 +41,24 @@ var promotionSchema = new mongoose.Schema({
 	price: { type: Number, required: true, default: 0 }
 });
 
+var transactionSchema = new mongoose.Schema({
+	type: { type: String, required: true },
+	id: { type: String, required: true },
+	hash: { type: String, required: true, unique: true }
+})
+
 orderSchema.plugin(uniqueValidator);
 roomSchema.plugin(uniqueValidator);
 promotionSchema.plugin(uniqueValidator);
+transactionSchema.plugin(uniqueValidator);
 
 // we need to create a model using it
 var Order = mongoose.model('Order', orderSchema);
 var Room = mongoose.model('Room', roomSchema);
 var Promotion = mongoose.model('Promotion', promotionSchema);
+var Transaction = mongoose.model('Transaction', transactionSchema);
 
 // make this available to our users in our Node applications
 module.exports = {
-	Order, Room, Promotion
+	Order, Room, Promotion, Transaction
 }
